@@ -16,24 +16,41 @@ namespace SQLite.CodeFirst.Console
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
-            ConfigureTeamEntity(modelBuilder);
-            ConfigureStadionEntity(modelBuilder);
-            ConfigurePlayerEntity(modelBuilder);
-
             modelBuilder.Conventions.Remove<PluralizingTableNameConvention>();
 
-            var initializer = new FootballDbInitializer(Database.Connection.ConnectionString, modelBuilder);
+            ConfigureTeamEntity(modelBuilder);
+            ConfigureStadionEntity(modelBuilder);
+            ConfigureCoachEntity(modelBuilder);
+            ConfigurePlayerEntity(modelBuilder);
+
+            var initializer = new FootballDbInitializer(modelBuilder);
             Database.SetInitializer(initializer);
         }
 
         private static void ConfigureTeamEntity(DbModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Team>();
+            modelBuilder.Entity<Team>().ToTable("Base.MyTable")
+                .HasRequired(t => t.Coach)
+                .WithMany()
+                .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<Team>()
+                .HasRequired(t => t.Stadion)
+                .WithRequiredPrincipal()
+                .WillCascadeOnDelete(true);
         }
 
         private static void ConfigureStadionEntity(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Stadion>();
+        }
+
+        private static void ConfigureCoachEntity(DbModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Coach>()
+                .HasRequired(p => p.Team)
+                .WithRequiredPrincipal(t => t.Coach)
+                .WillCascadeOnDelete(false);
         }
 
         private static void ConfigurePlayerEntity(DbModelBuilder modelBuilder)
@@ -47,14 +64,22 @@ namespace SQLite.CodeFirst.Console
 
     public class FootballDbInitializer : SqliteDropCreateDatabaseAlways<FootballDbContext>
     {
-        public FootballDbInitializer(string connectionString, DbModelBuilder modelBuilder)
-            : base(connectionString, modelBuilder) { }
+        public FootballDbInitializer(DbModelBuilder modelBuilder)
+            : base(modelBuilder)
+        { }
 
         protected override void Seed(FootballDbContext context)
         {
             context.Set<Team>().Add(new Team
             {
                 Name = "YB",
+                Coach = new Coach
+                {
+                    City = "Zürich",
+                    FirstName = "Masssaman",
+                    LastName = "Nachn",
+                    Street = "Testingstreet 844"
+                },
                 Players = new List<Player>
                 {
                     new Player
@@ -62,14 +87,16 @@ namespace SQLite.CodeFirst.Console
                         City = "Bern",
                         FirstName = "Marco",
                         LastName = "Bürki",
-                        Street = "Wunderstrasse 43"
+                        Street = "Wunderstrasse 43",
+                        Number = 12
                     },
                     new Player
                     {
                         City = "Berlin",
                         FirstName = "Alain",
                         LastName = "Rochat",
-                        Street = "Wonderstreet 13"
+                        Street = "Wonderstreet 13",
+                        Number = 14
                     }
                 },
                 Stadion = new Stadion

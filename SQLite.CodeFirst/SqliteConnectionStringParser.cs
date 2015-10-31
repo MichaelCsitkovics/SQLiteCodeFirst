@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace SQLite.CodeFirst
 {
@@ -20,7 +21,10 @@ namespace SQLite.CodeFirst
             foreach (var keyValuePair in keyValuePairs)
             {
                 string[] keyValue = keyValuePair.Split(KeyValueSeperator);
-                keyValuePairDictionary.Add(keyValue[KeyPosition].ToLower(), keyValue[ValuePosition]);
+                if (keyValue.Length >= 2)
+                {
+                    keyValuePairDictionary.Add(keyValue[KeyPosition].ToLower(CultureInfo.InvariantCulture), keyValue[ValuePosition]);
+                }
             }
 
             return keyValuePairDictionary;
@@ -29,6 +33,8 @@ namespace SQLite.CodeFirst
         public static string GetDataSource(string connectionString)
         {
             var path = ExpandDataDirectory(ParseSqliteConnectionString(connectionString)["data source"]);
+            // remove quotation mark if exists
+            path = path.Trim('"');
             return path;
         }
 
@@ -43,7 +49,7 @@ namespace SQLite.CodeFirst
 
             // find the replacement path
             object rootFolderObject = AppDomain.CurrentDomain.GetData("DataDirectory");
-            string rootFolderPath = (rootFolderObject as string);
+            string rootFolderPath = rootFolderObject as string;
             if (rootFolderObject != null && rootFolderPath == null)
             {
                 throw new InvalidOperationException("The value stored in the AppDomains 'DataDirectory' variable has to be a string!");
@@ -52,7 +58,7 @@ namespace SQLite.CodeFirst
             {
                 rootFolderPath = AppDomain.CurrentDomain.BaseDirectory;
             }
-            
+
             // We don't know if rootFolderpath ends with '\', and we don't know if the given name starts with onw
             int fileNamePosition = DataDirectoryToken.Length;    // filename starts right after the '|datadirectory|' keyword
             bool rootFolderEndsWith = (0 < rootFolderPath.Length) && rootFolderPath[rootFolderPath.Length - 1] == '\\';

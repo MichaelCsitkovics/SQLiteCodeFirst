@@ -5,11 +5,13 @@ using System.Linq;
 
 namespace SQLite.CodeFirst.Statement.ColumnConstraint
 {
-    internal class ColumnConstraintCollection : Collection<IColumnConstraint>, IColumnConstraint
+    internal class ColumnConstraintCollection : Collection<IColumnConstraint>, IColumnConstraintCollection
     {
         private const string ConstraintStatementSeperator = " ";
 
-        public ColumnConstraintCollection() { }
+        public ColumnConstraintCollection()
+            : this(new List<IColumnConstraint>())
+        { }
 
         public ColumnConstraintCollection(IEnumerable<IColumnConstraint> columnConstraints)
         {
